@@ -1,8 +1,6 @@
 #pragma once
 
-#include <bitset>
-#include "color.hpp"
-#include "piece.hpp"
+#include "include/starting_positions.hpp"
 
 namespace gracie
 {
@@ -10,23 +8,20 @@ namespace gracie
 	{
 		public:
 			auto instance() -> Bit_board;
-
-			auto compute_moves(Color color, Piece piece);
 		private:
 			Bit_board();
 
-			std::bitset<64> white_king_;
-			std::bitset<64> white_queen_;
-			std::bitset<64> white_rook_;
-			std::bitset<64> white_bishop_;
-			std::bitset<64> white_knight_;
-			std::bitset<64> white_pawn_;
-
-			std::bitset<64> black_king_;
-			std::bitset<64> black_queen_;
-			std::bitset<64> black_rook_;
-			std::bitset<64> black_bishop_;
-			std::bitset<64> black_knight_;
-			std::bitset<64> black_pawn_;
+			std::uint64_t white_king_{ white_king_starting_pos };
+          	std::uint64_t white_queen_{ white_queen_starting_pos };
+          	std::uint64_t white_rook_{ white_rook_starting_pos };
+          	std::uint64_t white_bishop_{ white_bishop_starting_pos };
+          	std::uint64_t white_knight_{ white_knight_starting_pos };
+          	std::uint64_t white_pawn_{ white_pawn_starting_pos };
+          	std::uint64_t black_king_{ black_king_starting_pos };
+          	std::uint64_t black_queen_{ black_queen_starting_pos };
+          	std::uint64_t black_rook_{ black_rook_starting_pos };
+          	std::uint64_t black_bishop_{ black_bishop_starting_pos };
+          	std::uint64_t black_knight_{ black_knight_starting_pos };
+          	std::uint64_t black_pawn_{ black_pawn_starting_pos };
 	};
 }

@@ -1,22 +1,76 @@
-#include "include/shifts.hpp"
-#include "include/masks.hpp"
+#include "include/utils/masks.hpp"
 
-#include <bitset>
+#include <cstdint>
 
 namespace gracie
 {
-    auto shift_north(std::bitset<64> pieces) -> std::bitset<64>
+    constexpr auto shift_north(std::uint64_t pieces) -> std::uint64_t
     {
         return pieces >> 8;
     }
 
-	auto shift_northeast(std::bitset<64> pieces) -> std::bitset<64>
-	{
-		return (pieces << 9) & gracie::not_a_file;
-	}
+    constexpr auto shift_northeast(std::uint64_t pieces) -> std::uint64_t
+    {
+        return (pieces << 9) & gracie::not_a_file;
+    }
 
-	auto shift_northwest(std::bitset<64> pieces) -> std::bitset<64>
-	{
-		return pieces << 7;
-	}
+    constexpr auto shift_northwest(std::uint64_t pieces) -> std::uint64_t
+    {
+        return pieces << 7;
+    }
+
+    constexpr auto shift_north_north_east(std::uint64_t pieces) -> std::uint64_t
+    {
+        return (pieces << 17) & gracie::not_a_file;
+    }
+
+    constexpr auto shift_north_east_east(std::uint64_t pieces) -> std::uint64_t
+    {
+        return (pieces << 10) & gracie::not_a_or_b_file;
+    }
+
+    constexpr auto shift_south_east_east(std::uint64_t pieces) -> std::uint64_t
+    {
+        return (pieces >> 6) & gracie::not_a_or_b_file;
+    }
+
+    constexpr auto shift_south_south_east(std::uint64_t pieces) -> std::uint64_t
+    {
+        return (pieces >> 15) & gracie::not_a_file;
+    }
+
+    constexpr auto shift_north_north_west(std::uint64_t pieces) -> std::uint64_t
+    {
+        return (pieces << 15) & gracie::not_h_file;
+    }
+
+    constexpr auto shift_north_west_west(std::uint64_t pieces) -> std::uint64_t
+    {
+        return (pieces << 6) & not_g_or_h_file;
+    }
+
+    constexpr auto shift_south_west_west(std::uint64_t pieces) -> std::uint64_t
+    {
+        return (pieces >> 10) & not_g_or_h_file;
+    }
+
+    constexpr auto shift_south_south_west(std::uint64_t pieces) -> std::uint64_t
+    {
+        return (pieces >> 17) & gracie::not_h_file;
+    }
+
+    constexpr auto shift_east(std::uint64_t pieces) -> std::uint64_t
+    {
+        return (pieces & not_h_file) << 1;
+    }
+
+    constexpr auto shift_west(std::uint64_t pieces) -> std::uint64_t
+    {
+        return (pieces & not_a_file) >> 1;
+    }
+
+    constexpr auto shift_south(std::uint64_t pieces) -> std::uint64_t
+    {
+        return pieces >> 8;
+    }
 } // namespace gracie
