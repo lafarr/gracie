@@ -43,8 +43,8 @@ namespace
 
     auto black_pawn_captures(std::uint64_t black_pawns, std::uint64_t white_occupied) -> std::uint64_t
     {
-        auto west_captures = (black_pawns & gracie::not_a_file) >> 9;
-        auto east_captures = (black_pawns & gracie::not_h_file) >> 7;
+        auto west_captures = gracie::shift_southwest(black_pawns);
+        auto east_captures = gracie::shift_southeast(black_pawns);
 
         return (west_captures | east_captures) & white_occupied;
     }

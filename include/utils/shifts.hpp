@@ -21,6 +21,16 @@ namespace gracie
         return (pieces << 7) & gracie::not_h_file;
     }
 
+    constexpr auto shift_southeast(std::uint64_t pieces) -> std::uint64_t
+    {
+        return (pieces >> 7) & gracie::not_a_file;
+    }
+
+    constexpr auto shift_southwest(std::uint64_t pieces) -> std::uint64_t
+    {
+        return (pieces >> 9) & gracie::not_h_file;
+    }
+
     constexpr auto shift_north_north_east(std::uint64_t pieces) -> std::uint64_t
     {
         return (pieces << 17) & gracie::not_a_file;
