@@ -1,8 +1,10 @@
 #pragma once
 
+#include "include/color.hpp"
+
 #include <cstdint>
 
 namespace gracie
 {
-	auto gen_white_pawn_moves(std::uint64_t white_pawns, std::uint64_t empty_squares, std::uint64_t black_occupied) -> std::uint64_t;
+	auto gen_pawn_moves(Color color, std::uint64_t pawns, std::uint64_t empty_squares, std::uint64_t enemy_occupied) -> std::uint64_t;
 }

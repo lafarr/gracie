@@ -4,6 +4,7 @@
 #include "include/move_gen/king.hpp"
 #include "include/move_gen/knight.hpp"
 #include "include/move_gen/pawn.hpp"
+#include "include/color.hpp"
 #include "include/utils/bithacks.hpp"
 
 #include <array>
@@ -15,9 +16,10 @@ namespace
 {
     struct Pawn_test_case
     {
-        std::uint64_t white_pawns;
+        gracie::Color color;
+        std::uint64_t pawns;
         std::uint64_t empty_squares;
-        std::uint64_t black_occupied;
+        std::uint64_t enemy_occupied;
         std::uint64_t expected_moves;
     };
 
@@ -108,54 +110,97 @@ namespace
         return moves;
     }
 
-    constexpr auto white_pawn_test_cases = std::array<Pawn_test_case, 8>{{
+    constexpr auto pawn_test_cases = std::array<Pawn_test_case, 13>{{
         {
-            .white_pawns = gracie::bit(12),
+            .color = gracie::Color::white,
+            .pawns = gracie::bit(12),
             .empty_squares = ~(gracie::bit(12)),
-            .black_occupied = 0,
+            .enemy_occupied = 0,
             .expected_moves = squares({20, 28}),
         },
         {
-            .white_pawns = gracie::bit(12),
+            .color = gracie::Color::white,
+            .pawns = gracie::bit(12),
             .empty_squares = ~(gracie::bit(12) | gracie::bit(20)),
-            .black_occupied = 0,
+            .enemy_occupied = 0,
             .expected_moves = 0,
         },
         {
-            .white_pawns = gracie::bit(12),
+            .color = gracie::Color::white,
+            .pawns = gracie::bit(12),
             .empty_squares = ~(gracie::bit(12) | gracie::bit(28)),
-            .black_occupied = 0,
+            .enemy_occupied = 0,
             .expected_moves = squares({20}),
         },
         {
-            .white_pawns = gracie::bit(12),
+            .color = gracie::Color::white,
+            .pawns = gracie::bit(12),
             .empty_squares = ~(gracie::bit(12) | gracie::bit(20) | gracie::bit(28)),
-            .black_occupied = 0,
+            .enemy_occupied = 0,
             .expected_moves = 0,
         },
         {
-            .white_pawns = gracie::bit(28),
+            .color = gracie::Color::white,
+            .pawns = gracie::bit(28),
             .empty_squares = ~(gracie::bit(28)),
-            .black_occupied = 0,
+            .enemy_occupied = 0,
             .expected_moves = squares({36}),
         },
         {
-            .white_pawns = gracie::bit(28),
+            .color = gracie::Color::white,
+            .pawns = gracie::bit(28),
             .empty_squares = ~(gracie::bit(28) | squares({35, 37})),
-            .black_occupied = squares({35, 37}),
+            .enemy_occupied = squares({35, 37}),
             .expected_moves = squares({35, 36, 37}),
         },
         {
-            .white_pawns = gracie::bit(8),
+            .color = gracie::Color::white,
+            .pawns = gracie::bit(8),
             .empty_squares = ~(gracie::bit(8) | gracie::bit(17)),
-            .black_occupied = gracie::bit(17),
+            .enemy_occupied = gracie::bit(17),
             .expected_moves = squares({16, 24, 17}),
         },
         {
-            .white_pawns = squares({8, 12}),
-            .empty_squares = ~(squares({8, 12, 16, 20, 24, 28, 17, 21})),
-            .black_occupied = squares({17, 21}),
+            .color = gracie::Color::white,
+            .pawns = squares({8, 12}),
+            .empty_squares = ~(squares({8, 12, 17, 21})),
+            .enemy_occupied = squares({17, 21}),
             .expected_moves = squares({16, 17, 20, 21, 24, 28}),
+        },
+        {
+            .color = gracie::Color::black,
+            .pawns = gracie::bit(52),
+            .empty_squares = ~(gracie::bit(52)),
+            .enemy_occupied = 0,
+            .expected_moves = squares({44, 36}),
+        },
+        {
+            .color = gracie::Color::black,
+            .pawns = gracie::bit(52),
+            .empty_squares = ~(gracie::bit(52) | gracie::bit(44)),
+            .enemy_occupied = 0,
+            .expected_moves = 0,
+        },
+        {
+            .color = gracie::Color::black,
+            .pawns = gracie::bit(52),
+            .empty_squares = ~(gracie::bit(52) | gracie::bit(36)),
+            .enemy_occupied = 0,
+            .expected_moves = squares({44}),
+        },
+        {
+            .color = gracie::Color::black,
+            .pawns = gracie::bit(35),
+            .empty_squares = ~(gracie::bit(35) | squares({26, 28})),
+            .enemy_occupied = squares({26, 28}),
+            .expected_moves = squares({27, 26, 28}),
+        },
+        {
+            .color = gracie::Color::black,
+            .pawns = squares({52, 55}),
+            .empty_squares = ~(squares({52, 55, 45, 46})),
+            .enemy_occupied = squares({45, 46}),
+            .expected_moves = squares({44, 45, 46, 47, 36, 39}),
         },
     }};
 } // namespace
@@ -182,16 +227,17 @@ BOOST_AUTO_TEST_CASE(knight_attack_table_matches_reference_for_all_squares)
     }
 }
 
-BOOST_AUTO_TEST_CASE(white_pawn_move_generation_matches_scenario_matrix)
+BOOST_AUTO_TEST_CASE(pawn_move_generation_matches_scenario_matrix)
 {
-    for (std::size_t idx = 0; idx < white_pawn_test_cases.size(); ++idx)
+    for (std::size_t idx = 0; idx < pawn_test_cases.size(); ++idx)
     {
-        const auto& test_case = white_pawn_test_cases.at(idx);
+        const auto& test_case = pawn_test_cases.at(idx);
         BOOST_TEST_CONTEXT("pawn_case=" << idx)
         {
-            BOOST_TEST(gracie::gen_white_pawn_moves(test_case.white_pawns,
-                                                    test_case.empty_squares,
-                                                    test_case.black_occupied) == test_case.expected_moves);
+            BOOST_TEST(gracie::gen_pawn_moves(test_case.color,
+                                              test_case.pawns,
+                                              test_case.empty_squares,
+                                              test_case.enemy_occupied) == test_case.expected_moves);
         }
     }
 }

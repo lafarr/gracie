@@ -34,4 +34,5 @@ namespace gracie
     inline constexpr auto not_g_or_h_file = ~(g_file | h_file);
 
     inline constexpr auto rank_4 = std::uint64_t{ 0xFF'00'00'00 };
+    inline constexpr auto rank_5 = std::uint64_t{ 0xFF'00'00'00'00 };
 } // namespace gracie
