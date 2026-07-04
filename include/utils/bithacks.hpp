@@ -2,9 +2,9 @@
 
 #include <bit>
 #include <cassert>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
-#include <concepts>
 
 namespace gracie
 {
@@ -25,7 +25,7 @@ namespace gracie
     }
 
     template <typename T>
-    constexpr auto pop_lsb(T& val) -> std::size_t
+    [[nodiscard]] constexpr auto pop_lsb(T& val) -> std::size_t
     {
         assert(val != 0);
         const auto lsb_index = static_cast<std::size_t>(std::countr_zero(val));
@@ -33,13 +33,33 @@ namespace gracie
         return lsb_index;
     }
 
-	constexpr auto file(std::integral auto val) -> int
-	{
-		return val % 8;
-	}
-	
-	constexpr auto rank(std::integral auto val) -> int
-	{
-		return static_cast<int>(val) / 8;
-	}
+    [[nodiscard]] constexpr auto file(std::integral auto val) -> int
+    {
+        return val % 8;
+    }
+
+    [[nodiscard]] constexpr auto rank(std::integral auto val) -> int
+    {
+        return static_cast<int>(val) / 8;
+    }
+
+    [[nodiscard]] constexpr auto north(int val) -> int
+    {
+        return val << 8;
+    }
+
+    [[nodiscard]] constexpr auto south(int val) -> int
+    {
+        return val >> 8;
+    }
+
+    [[nodiscard]] constexpr auto east(int val) -> int
+    {
+        return val << 1;
+    }
+
+    [[nodiscard]] constexpr auto west(int val) -> int
+    {
+        return val >> 1;
+    }
 } // namespace gracie

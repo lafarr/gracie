@@ -1,6 +1,6 @@
-#include "include/move_gen/pawn.hpp"
+#include "include/movegen/pawn.hpp"
 
-#include "include/color.hpp"
+#include "include/types/color.hpp"
 #include "include/utils/masks.hpp"
 #include "include/utils/shifts.hpp"
 

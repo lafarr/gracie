@@ -1,6 +1,6 @@
 #pragma once
 
-#include "include/color.hpp"
+#include "include/types/color.hpp"
 
 #include <cstdint>
 

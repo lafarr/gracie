@@ -1,4 +1,4 @@
-#include "include/move_gen/king.hpp"
+#include "include/movegen/king.hpp"
 
 #include "include/utils/constants.hpp"
 #include "include/utils/bithacks.hpp"
