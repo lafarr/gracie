@@ -8,7 +8,7 @@ namespace gracie
 {
     constexpr auto shift_north(std::uint64_t pieces) -> std::uint64_t
     {
-        return pieces >> 8;
+        return pieces << 8;
     }
 
     constexpr auto shift_northeast(std::uint64_t pieces) -> std::uint64_t
@@ -18,7 +18,7 @@ namespace gracie
 
     constexpr auto shift_northwest(std::uint64_t pieces) -> std::uint64_t
     {
-        return pieces << 7;
+        return (pieces << 7) & gracie::not_h_file;
     }
 
     constexpr auto shift_north_north_east(std::uint64_t pieces) -> std::uint64_t

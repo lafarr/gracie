@@ -2,12 +2,17 @@
 
 #include "include/starting_positions.hpp"
 
+#include <cstdint>
+
 namespace gracie
 {
 	class Bit_board
 	{
 		public:
-			auto instance() -> Bit_board;
+			static auto instance() -> Bit_board&;
+			[[nodiscard]] auto white_occupied() const -> std::uint64_t;
+			[[nodiscard]] auto black_occupied() const -> std::uint64_t;
+			[[nodiscard]] auto all_occupied() const -> std::uint64_t;
 		private:
 			Bit_board();
 

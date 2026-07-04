@@ -32,7 +32,7 @@ namespace
 namespace gracie
 {
 	// TODO: need to figure out how to do en-passant
-    auto constexpr gen_white_pawn_moves(std::uint64_t white_pawns, std::uint64_t empty_squares, std::uint64_t black_occupied) -> std::uint64_t
+    auto gen_white_pawn_moves(std::uint64_t white_pawns, std::uint64_t empty_squares, std::uint64_t black_occupied) -> std::uint64_t
     {
         return white_pawn_single_push_moves(white_pawns, empty_squares) |
                white_pawn_double_push_moves(white_pawns, empty_squares) |

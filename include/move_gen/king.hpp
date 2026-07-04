@@ -1,8 +1,9 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 namespace gracie
 {
-	auto gen_possible_king_moves(std::uint64_t king_pos) -> std::uint64_t;
+	auto gen_possible_king_moves(std::size_t idx) -> std::uint64_t;
 }

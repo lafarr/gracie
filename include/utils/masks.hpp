@@ -10,10 +10,10 @@ namespace gracie
     inline constexpr auto b_file     = std::uint64_t{ 0x02'02'02'02'02'02'02'02 };
     inline constexpr auto not_b_file = ~b_file;
 
-    inline constexpr auto c_file     = std::uint64_t{ 0x40'40'40'40'40'40'40'40 };
+    inline constexpr auto c_file     = std::uint64_t{ 0x04'04'04'04'04'04'04'04 };
     inline constexpr auto not_c_file = ~c_file;
 
-    inline constexpr auto d_file     = std::uint64_t{ 0x80'80'80'80'80'80'80'80 };
+    inline constexpr auto d_file     = std::uint64_t{ 0x08'08'08'08'08'08'08'08 };
     inline constexpr auto not_d_file = ~d_file;
 
     inline constexpr auto e_file     = std::uint64_t{ 0x10'10'10'10'10'10'10'10 };

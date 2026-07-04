@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.10)
 
 project(engine)
 
-file(GLOB_RECURSE ENGINE_SOURCES "src/*.cpp")
+file(GLOB_RECURSE GRACIE_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
+list(FILTER GRACIE_SOURCES EXCLUDE REGEX ".*/main\\.cpp$")
+list(FILTER GRACIE_SOURCES EXCLUDE REGEX ".*/rook\\.cpp$")
 
 set(CMAKE_CXX_EXTENSIONS ON)
 set(CMAKE_C_EXTENSIONS ON)
@@ -110,6 +112,18 @@ target_link_options(settings INTERFACE
 	>
 )
 
-add_executable(${PROJECT_NAME} ${ENGINE_SOURCES})
-target_link_libraries(engine PRIVATE settings)
+add_library(gracie_core ${GRACIE_SOURCES})
+target_link_libraries(gracie_core PUBLIC settings)
+target_include_directories(gracie_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_executable(${PROJECT_NAME} src/main.cpp)
+target_link_libraries(engine PRIVATE gracie_core)
 target_include_directories(engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+enable_testing()
+
+add_executable(gracie_tests tests/move_gen_tests.cpp)
+target_link_libraries(gracie_tests PRIVATE gracie_core settings)
+target_include_directories(gracie_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_test(NAME gracie_tests COMMAND gracie_tests)

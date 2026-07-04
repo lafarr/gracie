@@ -40,5 +40,5 @@ namespace gracie
 	inline constexpr std::uint64_t black_queen_starting_pos = (1ULL << 59);
 
 	// entire second-to-last rank
-	inline constexpr std::uint64_t black_pawn_starting_pos = (1ULL << 63) >> 8;
+	inline constexpr std::uint64_t black_pawn_starting_pos = 0xFFULL << 48;
 } // namespace gracie
