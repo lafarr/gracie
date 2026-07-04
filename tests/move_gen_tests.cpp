@@ -1,12 +1,15 @@
 #define BOOST_TEST_MODULE move_gen_tests
 #include <boost/test/included/unit_test.hpp>
 
+#include "include/move_gen/bishop.hpp"
 #include "include/move_gen/king.hpp"
 #include "include/move_gen/knight.hpp"
 #include "include/move_gen/pawn.hpp"
 #include "include/move_gen/rook.hpp"
 #include "include/color.hpp"
 #include "include/utils/bithacks.hpp"
+#include "include/utils/constants.hpp"
+#include "include/utils/masks.hpp"
 
 #include <algorithm>
 #include <array>
@@ -17,15 +20,6 @@
 
 namespace
 {
-    struct Pawn_test_case
-    {
-        gracie::Color color;
-        std::uint64_t pawns;
-        std::uint64_t empty_squares;
-        std::uint64_t enemy_occupied;
-        std::uint64_t expected_moves;
-    };
-
     [[nodiscard]] constexpr auto squares(std::initializer_list<std::size_t> idxs) -> std::uint64_t
     {
         std::uint64_t board = 0;
@@ -69,12 +63,89 @@ namespace
 
                 const auto next_file = static_cast<int>(file) + file_delta;
                 const auto next_rank = static_cast<int>(rank) + rank_delta;
-                if ((next_file < 0) || (next_file >= 8) || (next_rank < 0) || (next_rank >= 8))
+                if ((next_file < gracie::first_file_idx) || (next_file > gracie::last_file_idx) ||
+                    (next_rank < gracie::first_rank_idx) || (next_rank > gracie::back_rank))
                 {
                     continue;
                 }
 
                 moves |= gracie::bit(square_idx(static_cast<std::size_t>(next_file), static_cast<std::size_t>(next_rank)));
+            }
+        }
+
+        return moves;
+    }
+
+    [[nodiscard]] constexpr auto expected_bishop_moves(std::size_t idx,
+                                                       std::uint64_t self_occupied,
+                                                       std::uint64_t enemy_occupied) -> std::uint64_t
+    {
+        std::uint64_t moves = 0;
+        const auto file = file_of(idx);
+        const auto rank = rank_of(idx);
+
+        for (std::size_t next_file = file + 1, next_rank = rank + 1; next_file < 8 && next_rank < 8;
+             ++next_file, ++next_rank)
+        {
+            const auto next_square = square_idx(next_file, next_rank);
+            const auto next_bit = gracie::bit(next_square);
+            if ((self_occupied & next_bit) != 0)
+            {
+                break;
+            }
+
+            moves |= next_bit;
+            if ((enemy_occupied & next_bit) != 0)
+            {
+                break;
+            }
+        }
+
+        for (std::size_t next_file = file, next_rank = rank; next_file-- > 0 && ++next_rank < 8;)
+        {
+            const auto next_square = square_idx(next_file, next_rank);
+            const auto next_bit = gracie::bit(next_square);
+            if ((self_occupied & next_bit) != 0)
+            {
+                break;
+            }
+
+            moves |= next_bit;
+            if ((enemy_occupied & next_bit) != 0)
+            {
+                break;
+            }
+        }
+
+        for (std::size_t next_file = file + 1, next_rank = rank; next_file < 8 && next_rank-- > 0; ++next_file)
+        {
+            const auto next_square = square_idx(next_file, next_rank);
+            const auto next_bit = gracie::bit(next_square);
+            if ((self_occupied & next_bit) != 0)
+            {
+                break;
+            }
+
+            moves |= next_bit;
+            if ((enemy_occupied & next_bit) != 0)
+            {
+                break;
+            }
+        }
+
+        for (std::size_t next_file = file, next_rank = rank; next_file-- > 0 && next_rank-- > 0;)
+        {
+            const auto next_square = square_idx(next_file, next_rank);
+            const auto next_bit = gracie::bit(next_square);
+            if ((self_occupied & next_bit) != 0)
+            {
+                break;
+            }
+
+            moves |= next_bit;
+            if ((enemy_occupied & next_bit) != 0)
+            {
+                break;
             }
         }
 
@@ -102,7 +173,8 @@ namespace
         {
             const auto next_file = static_cast<int>(file) + delta[0];
             const auto next_rank = static_cast<int>(rank) + delta[1];
-            if ((next_file < 0) || (next_file >= 8) || (next_rank < 0) || (next_rank >= 8))
+            if ((next_file < gracie::first_file_idx) || (next_file > gracie::last_file_idx) ||
+                (next_rank < gracie::first_rank_idx) || (next_rank > gracie::back_rank))
             {
                 continue;
             }
@@ -220,101 +292,6 @@ namespace
 
         return encoded_moves;
     }
-
-    constexpr auto pawn_test_cases = std::array<Pawn_test_case, 13>{{
-        {
-            .color = gracie::Color::white,
-            .pawns = gracie::bit(12),
-            .empty_squares = ~(gracie::bit(12)),
-            .enemy_occupied = 0,
-            .expected_moves = squares({20, 28}),
-        },
-        {
-            .color = gracie::Color::white,
-            .pawns = gracie::bit(12),
-            .empty_squares = ~(gracie::bit(12) | gracie::bit(20)),
-            .enemy_occupied = 0,
-            .expected_moves = 0,
-        },
-        {
-            .color = gracie::Color::white,
-            .pawns = gracie::bit(12),
-            .empty_squares = ~(gracie::bit(12) | gracie::bit(28)),
-            .enemy_occupied = 0,
-            .expected_moves = squares({20}),
-        },
-        {
-            .color = gracie::Color::white,
-            .pawns = gracie::bit(12),
-            .empty_squares = ~(gracie::bit(12) | gracie::bit(20) | gracie::bit(28)),
-            .enemy_occupied = 0,
-            .expected_moves = 0,
-        },
-        {
-            .color = gracie::Color::white,
-            .pawns = gracie::bit(28),
-            .empty_squares = ~(gracie::bit(28)),
-            .enemy_occupied = 0,
-            .expected_moves = squares({36}),
-        },
-        {
-            .color = gracie::Color::white,
-            .pawns = gracie::bit(28),
-            .empty_squares = ~(gracie::bit(28) | squares({35, 37})),
-            .enemy_occupied = squares({35, 37}),
-            .expected_moves = squares({35, 36, 37}),
-        },
-        {
-            .color = gracie::Color::white,
-            .pawns = gracie::bit(8),
-            .empty_squares = ~(gracie::bit(8) | gracie::bit(17)),
-            .enemy_occupied = gracie::bit(17),
-            .expected_moves = squares({16, 24, 17}),
-        },
-        {
-            .color = gracie::Color::white,
-            .pawns = squares({8, 12}),
-            .empty_squares = ~(squares({8, 12, 17, 21})),
-            .enemy_occupied = squares({17, 21}),
-            .expected_moves = squares({16, 17, 20, 21, 24, 28}),
-        },
-        {
-            .color = gracie::Color::black,
-            .pawns = gracie::bit(52),
-            .empty_squares = ~(gracie::bit(52)),
-            .enemy_occupied = 0,
-            .expected_moves = squares({44, 36}),
-        },
-        {
-            .color = gracie::Color::black,
-            .pawns = gracie::bit(52),
-            .empty_squares = ~(gracie::bit(52) | gracie::bit(44)),
-            .enemy_occupied = 0,
-            .expected_moves = 0,
-        },
-        {
-            .color = gracie::Color::black,
-            .pawns = gracie::bit(52),
-            .empty_squares = ~(gracie::bit(52) | gracie::bit(36)),
-            .enemy_occupied = 0,
-            .expected_moves = squares({44}),
-        },
-        {
-            .color = gracie::Color::black,
-            .pawns = gracie::bit(35),
-            .empty_squares = ~(gracie::bit(35) | squares({26, 28})),
-            .enemy_occupied = squares({26, 28}),
-            .expected_moves = squares({27, 26, 28}),
-        },
-        {
-            .color = gracie::Color::black,
-            .pawns = squares({52, 55}),
-            .empty_squares = ~(squares({52, 55, 45, 46})),
-            .enemy_occupied = squares({45, 46}),
-            .expected_moves = squares({44, 45, 46, 47, 36, 39}),
-        },
-    }};
-
 } // namespace
 
 BOOST_AUTO_TEST_CASE(king_attack_table_matches_reference_for_all_squares)
@@ -339,17 +316,163 @@ BOOST_AUTO_TEST_CASE(knight_attack_table_matches_reference_for_all_squares)
     }
 }
 
-BOOST_AUTO_TEST_CASE(pawn_move_generation_matches_scenario_matrix)
+BOOST_AUTO_TEST_CASE(pawn_move_generation_matches_exhaustive_single_pawn_local_patterns)
 {
-    for (std::size_t idx = 0; idx < pawn_test_cases.size(); ++idx)
+    for (const auto color : {gracie::Color::white, gracie::Color::black})
     {
-        const auto& test_case = pawn_test_cases.at(idx);
-        BOOST_TEST_CONTEXT("pawn_case=" << idx)
+        for (std::size_t idx = 0; idx < 64; ++idx)
         {
-            BOOST_TEST(gracie::gen_pawn_moves(test_case.color,
-                                              test_case.pawns,
-                                              test_case.empty_squares,
-                                              test_case.enemy_occupied) == test_case.expected_moves);
+            const auto pawn = gracie::bit(idx);
+            const auto file = file_of(idx);
+            const auto rank = rank_of(idx);
+
+            const auto one_step_valid = (color == gracie::Color::white) ? (rank < 7) : (rank > 0);
+            const auto two_step_valid =
+                (color == gracie::Color::white) ? (rank == 1) : (rank == 6);
+            const auto left_capture_valid =
+                (color == gracie::Color::white) ? (rank < 7 && file > 0) : (rank > 0 && file > 0);
+            const auto right_capture_valid =
+                (color == gracie::Color::white) ? (rank < 7 && file < 7) : (rank > 0 && file < 7);
+
+            const auto one_step_square = (color == gracie::Color::white) ? idx + 8 : idx - 8;
+            const auto two_step_square = (color == gracie::Color::white) ? idx + 16 : idx - 16;
+            const auto left_capture_square = (color == gracie::Color::white) ? idx + 7 : idx - 9;
+            const auto right_capture_square = (color == gracie::Color::white) ? idx + 9 : idx - 7;
+
+            for (int occupancy_pattern = 0; occupancy_pattern < 16; ++occupancy_pattern)
+            {
+                std::uint64_t empty_squares = ~pawn;
+                std::uint64_t enemy_occupied = 0;
+
+                const auto one_step_empty = ((occupancy_pattern & 0b0001) == 0);
+                const auto two_step_empty = ((occupancy_pattern & 0b0010) == 0);
+                const auto left_enemy = (occupancy_pattern & 0b0100) != 0;
+                const auto right_enemy = (occupancy_pattern & 0b1000) != 0;
+
+                if (one_step_valid && !one_step_empty)
+                {
+                    empty_squares &= ~gracie::bit(one_step_square);
+                }
+
+                if (two_step_valid && !two_step_empty)
+                {
+                    empty_squares &= ~gracie::bit(two_step_square);
+                }
+
+                if (left_capture_valid && left_enemy)
+                {
+                    empty_squares &= ~gracie::bit(left_capture_square);
+                    enemy_occupied |= gracie::bit(left_capture_square);
+                }
+
+                if (right_capture_valid && right_enemy)
+                {
+                    empty_squares &= ~gracie::bit(right_capture_square);
+                    enemy_occupied |= gracie::bit(right_capture_square);
+                }
+
+                std::uint64_t expected_moves = 0;
+                if (one_step_valid && one_step_empty)
+                {
+                    expected_moves |= gracie::bit(one_step_square);
+                    if (two_step_valid && two_step_empty)
+                    {
+                        expected_moves |= gracie::bit(two_step_square);
+                    }
+                }
+
+                if (left_capture_valid && left_enemy)
+                {
+                    expected_moves |= gracie::bit(left_capture_square);
+                }
+
+                if (right_capture_valid && right_enemy)
+                {
+                    expected_moves |= gracie::bit(right_capture_square);
+                }
+
+                BOOST_TEST_CONTEXT("color=" << static_cast<int>(color)
+                                   << " square=" << idx
+                                   << " pattern=" << occupancy_pattern)
+                {
+                    BOOST_TEST(gracie::gen_pawn_moves(color, pawn, empty_squares, enemy_occupied) == expected_moves);
+                }
+            }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(bishop_attack_generation_matches_reference_on_empty_board_for_all_squares)
+{
+    for (std::size_t idx = 0; idx < 64; ++idx)
+    {
+        const auto bishop = gracie::bit(idx);
+        const auto moves = gracie::gen_bishop_moves(bishop, bishop, 0);
+        BOOST_TEST_CONTEXT("square=" << idx)
+        {
+            BOOST_TEST(moves_to_bitboard(moves, idx) == expected_bishop_moves(idx, bishop, 0));
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(bishop_move_generation_matches_blocker_and_multi_bishop_scenarios)
+{
+    struct Bishop_test_case
+    {
+        std::uint64_t bishops;
+        std::uint64_t self_occupied;
+        std::uint64_t enemy_occupied;
+        std::vector<int> expected_moves;
+    };
+
+    const auto bishop_test_cases = std::array<Bishop_test_case, 3>{{
+        {
+            .bishops = gracie::bit(27),
+            .self_occupied = gracie::bit(27),
+            .enemy_occupied = 0,
+            .expected_moves = {
+                encode_move(27, 0),  encode_move(27, 6),  encode_move(27, 9),  encode_move(27, 13),
+                encode_move(27, 18), encode_move(27, 20), encode_move(27, 34), encode_move(27, 36),
+                encode_move(27, 41), encode_move(27, 45), encode_move(27, 48), encode_move(27, 54),
+                encode_move(27, 63),
+            },
+        },
+        {
+            .bishops = gracie::bit(27),
+            .self_occupied = squares({27, 18, 45}),
+            .enemy_occupied = squares({13, 36}),
+            .expected_moves = {
+                encode_move(27, 13), encode_move(27, 20), encode_move(27, 34), encode_move(27, 36),
+                encode_move(27, 41), encode_move(27, 48),
+            },
+        },
+        {
+            .bishops = squares({2, 61}),
+            .self_occupied = squares({2, 61}),
+            .enemy_occupied = squares({16, 54}),
+            .expected_moves = {
+                encode_move(2, 9),  encode_move(2, 11), encode_move(2, 16), encode_move(2, 20),
+                encode_move(2, 29), encode_move(2, 38), encode_move(2, 47),
+                encode_move(61, 16), encode_move(61, 25), encode_move(61, 34), encode_move(61, 43),
+                encode_move(61, 52), encode_move(61, 54),
+            },
+        },
+    }};
+
+    for (std::size_t idx = 0; idx < bishop_test_cases.size(); ++idx)
+    {
+        auto expected = bishop_test_cases.at(idx).expected_moves;
+        auto actual = encode_moves(gracie::gen_bishop_moves(bishop_test_cases.at(idx).bishops,
+                                                            bishop_test_cases.at(idx).self_occupied,
+                                                            bishop_test_cases.at(idx).enemy_occupied));
+
+        std::ranges::sort(actual);
+        std::ranges::sort(expected);
+
+        BOOST_TEST_CONTEXT("bishop_case=" << idx)
+        {
+            BOOST_TEST(actual.size() == expected.size());
+            BOOST_TEST(actual == expected, boost::test_tools::per_element());
         }
     }
 }

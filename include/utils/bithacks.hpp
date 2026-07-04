@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <concepts>
 
 namespace gracie
 {
@@ -31,4 +32,14 @@ namespace gracie
         val &= (val - 1);
         return lsb_index;
     }
+
+	constexpr auto file(std::integral auto val) -> int
+	{
+		return val % 8;
+	}
+	
+	constexpr auto rank(std::integral auto val) -> int
+	{
+		return static_cast<int>(val) / 8;
+	}
 } // namespace gracie

@@ -17,8 +17,8 @@ namespace
     {
         auto single_push_moves = white_pawn_single_push_moves(white_pawns, empty_squares);
 
-        // rank_4 is here becauase a double push from a pawn will always be to rank 4
-        return gracie::shift_north(single_push_moves) & empty_squares & gracie::rank_4;
+        // fourth_rank is here because a double push from a white pawn always lands on rank 4.
+        return gracie::shift_north(single_push_moves) & empty_squares & gracie::fourth_rank;
     }
 
     auto white_pawn_captures(std::uint64_t white_pawns, std::uint64_t black_occupied) -> std::uint64_t
@@ -38,7 +38,7 @@ namespace
     {
         auto single_push_moves = black_pawn_single_push_moves(black_pawns, empty_squares);
 
-        return gracie::shift_south(single_push_moves) & empty_squares & gracie::rank_5;
+        return gracie::shift_south(single_push_moves) & empty_squares & gracie::fifth_rank;
     }
 
     auto black_pawn_captures(std::uint64_t black_pawns, std::uint64_t white_occupied) -> std::uint64_t

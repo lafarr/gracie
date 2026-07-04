@@ -1,6 +1,8 @@
 #include "include/move_gen/rook.hpp"
 
 #include "include/utils/bithacks.hpp"
+#include "include/utils/constants.hpp"
+#include "include/utils/masks.hpp"
 #include "include/utils/move.hpp"
 
 #include <cstddef>
@@ -9,124 +11,85 @@
 
 namespace
 {
-    auto find_rook_moves(std::size_t idx, std::uint64_t self_occupied, std::uint64_t enemy_occupied)
-        -> std::vector<gracie::Move>
+    auto compute_ray_moves(std::size_t idx, int file_delta, int rank_delta, std::uint64_t self_occupied,
+                           std::uint64_t enemy_occupied)
+        -> std::uint64_t
     {
-        // for each direction:
-        // move one square in direction, if off board stop, if enemy piece or friendly piece,
-        // add the move to the vector
-        //
-        // north -> << 8
-        // south -> >> 8
-        // east -> << 1
-        // west -> >> 1
+        std::uint64_t attacks = 0;
 
-        std::vector<gracie::Move> moves;
-
-		// north
-        auto curr_pos = gracie::bit(idx) << 8;
-
-        while (curr_pos != 0)
+        for (int file = gracie::file(idx) + file_delta, rank = gracie::rank(idx) + rank_delta;
+             file >= gracie::first_file_idx && file <= gracie::last_file_idx &&
+             rank >= gracie::first_rank_idx && rank <= gracie::back_rank;
+             file += file_delta, rank += rank_delta)
         {
-			auto bitset_idx = gracie::square_of(curr_pos);
+            const auto to = static_cast<std::size_t>((rank * 8) + file);
+            const auto to_bit = gracie::bit(to);
 
-            if (auto is_enemy_square = (enemy_occupied & curr_pos) != 0; is_enemy_square)
+            if ((enemy_occupied & to_bit) != 0)
             {
-                moves.push_back({ .from = static_cast<int>(idx), .to = static_cast<int>(bitset_idx) });
+                attacks |= to_bit;
                 break;
             }
 
-            if (auto is_friendly_square = (self_occupied & curr_pos) != 0; is_friendly_square)
+            if ((self_occupied & to_bit) != 0)
             {
                 break;
             }
 
-            moves.push_back({ .from = static_cast<int>(idx), .to = static_cast<int>(bitset_idx) });
-            curr_pos <<= 8;
+            attacks |= to_bit;
         }
 
-		// south
-		curr_pos = gracie::bit(idx) >> 8;
-		
-		while (curr_pos != 0)
-		{
-			auto bitset_idx = gracie::square_of(curr_pos);
+        return attacks;
+    }
 
-            if (auto is_enemy_square = (enemy_occupied & curr_pos) != 0; is_enemy_square)
-            {
-                moves.push_back({ .from = static_cast<int>(idx), .to = static_cast<int>(bitset_idx) });
-                break;
-            }
+    auto compute_north_moves(std::size_t idx, std::uint64_t self_occupied, std::uint64_t enemy_occupied)
+        -> std::uint64_t
+    {
+        return compute_ray_moves(idx, 0, 1, self_occupied, enemy_occupied);
+    }
 
-            if (auto is_friendly_square = (self_occupied & curr_pos) != 0; is_friendly_square)
-            {
-                break;
-            }
+    auto compute_south_moves(std::size_t idx, std::uint64_t self_occupied, std::uint64_t enemy_occupied)
+        -> std::uint64_t
+    {
+        return compute_ray_moves(idx, 0, -1, self_occupied, enemy_occupied);
+    }
 
-            moves.push_back({ .from = static_cast<int>(idx), .to = static_cast<int>(bitset_idx) });
-            curr_pos >>= 8;
-		}
+    auto compute_east_moves(std::size_t idx, std::uint64_t self_occupied, std::uint64_t enemy_occupied)
+        -> std::uint64_t
+    {
+        return compute_ray_moves(idx, 1, 0, self_occupied, enemy_occupied);
+    }
 
-		// east
-		curr_pos = gracie::bit(idx) << 1;
-		const auto start_rank = idx / 8;
-
-		while ((curr_pos != 0) && ((gracie::square_of(curr_pos) / 8) == start_rank))
-		{
-			auto bitset_idx = gracie::square_of(curr_pos);
-
-            if (auto is_enemy_square = (enemy_occupied & curr_pos) != 0; is_enemy_square)
-            {
-                moves.push_back({ .from = static_cast<int>(idx), .to = static_cast<int>(bitset_idx) });
-                break;
-            }
-
-            if (auto is_friendly_square = (self_occupied & curr_pos) != 0; is_friendly_square)
-            {
-                break;
-            }
-
-            moves.push_back({ .from = static_cast<int>(idx), .to = static_cast<int>(bitset_idx) });
-            curr_pos <<= 1;
-		}
-
-		// west
-		curr_pos = gracie::bit(idx) >> 1;
-
-		while ((curr_pos != 0) && ((gracie::square_of(curr_pos) / 8) == start_rank))
-		{
-			auto bitset_idx = gracie::square_of(curr_pos);
-
-            if (auto is_enemy_square = (enemy_occupied & curr_pos) != 0; is_enemy_square)
-            {
-                moves.push_back({ .from = static_cast<int>(idx), .to = static_cast<int>(bitset_idx) });
-                break;
-            }
-
-            if (auto is_friendly_square = (self_occupied & curr_pos) != 0; is_friendly_square)
-            {
-                break;
-            }
-
-            moves.push_back({ .from = static_cast<int>(idx), .to = static_cast<int>(bitset_idx) });
-            curr_pos >>= 1;
-		}
-
-        return moves;
+    auto compute_west_moves(std::size_t idx, std::uint64_t self_occupied, std::uint64_t enemy_occupied)
+        -> std::uint64_t
+    {
+        return compute_ray_moves(idx, -1, 0, self_occupied, enemy_occupied);
     }
 } // namespace
 
 namespace gracie
 {
+    auto gen_rook_attacks(std::size_t idx, std::uint64_t self_occupied, std::uint64_t enemy_occupied) -> std::uint64_t
+    {
+        return compute_north_moves(idx, self_occupied, enemy_occupied) |
+               compute_south_moves(idx, self_occupied, enemy_occupied) |
+               compute_east_moves(idx, self_occupied, enemy_occupied) |
+               compute_west_moves(idx, self_occupied, enemy_occupied);
+    }
+
     auto gen_rook_moves(std::uint64_t rooks, std::uint64_t self_occupied, std::uint64_t enemy_occupied)
         -> std::vector<Move>
     {
         std::vector<Move> generated_moves;
         while (rooks > 0)
         {
-            auto idx   = pop_lsb(rooks);
-            auto moves = find_rook_moves(idx, self_occupied, enemy_occupied);
-            generated_moves.insert(generated_moves.end(), moves.begin(), moves.end());
+            const auto idx = pop_lsb(rooks);
+            auto attacks = gen_rook_attacks(idx, self_occupied, enemy_occupied);
+            while (attacks > 0)
+            {
+                const auto to = pop_lsb(attacks);
+                generated_moves.push_back({ .from = static_cast<int>(idx), .to = static_cast<int>(to) });
+            }
         }
 
         return generated_moves;
